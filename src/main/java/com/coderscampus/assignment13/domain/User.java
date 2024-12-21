@@ -35,16 +35,6 @@ public class User {
         }
     }
 
-    public void addAccount(Account account) {
-        accounts.add(account);
-        account.setUser(this);
-    }
-
-    public void removeAccount(Account account) {
-        accounts.remove(account);
-        account.setUser(null);
-    }
-
     public Long getUserId() {
         return userId;
     }

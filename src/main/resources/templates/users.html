@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html xmlns:th="http://thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <html>
 <head>
 	<title>Users List</title>
 </head>
 <body>
+<div class="navbar">
+    <link rel="stylesheet" href="/style.css">
 	<h1>Users</h1>
+	<a href="/register">Add New User</a>
+</div>
 	
 	<div th:each="user : ${users}">
 		<span><a th:href="@{/users/{userId}(userId=${user.userId})}">[[${user.userId}]]</a></span><br/>

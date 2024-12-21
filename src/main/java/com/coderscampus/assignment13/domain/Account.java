@@ -8,12 +8,8 @@ public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long accountId;
-    
     @Column(length = 100)
     private String accountName;
-
-    private Integer accountsOrder = 0;
-
     @ManyToOne
     @JoinColumn(name = "user_id") 
     private User user;
@@ -34,14 +30,6 @@ public class Account {
         this.accountName = accountName;
     }
 
-    public Integer getAccountsOrder() {
-        return accountsOrder;
-    }
-
-    public void setAccountsOrder(Integer accountsOrder) {
-        this.accountsOrder = accountsOrder;
-    }
-
     public User getUser() {
         return user;
     }
@@ -52,8 +40,7 @@ public class Account {
 
 	@Override
 	public String toString() {
-		return "Account [accountId=" + accountId + ", accountName=" + accountName + ", accountsOrder=" + accountsOrder
-				+ ", user=" + user + "]";
+		return "Account [accountId=" + accountId + ", accountName=" + accountName + ", user=" + user + "]";
 	}
-	
+
 }

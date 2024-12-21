@@ -34,15 +34,12 @@ public class UserService {
 
     public User findById(Long userId) {
         return userRepo.findById(userId)
-                .orElseThrow();
+                .orElseThrow(() -> 
+                new ResourceNotFoundException("User not found for ID: " + userId));
     }
 
     public Set<User> findAll() {
         return userRepo.findAllUsersWithAccountsAndAddress(); 
-    }
-
-    public List<User> findByUsername(String username) {
-        return userRepo.findByUsername(username);
     }
 
     @Transactional
@@ -95,63 +92,4 @@ public class UserService {
         }
     }
 
-    
-    @Transactional
-    public Account createAccountForUser(Long userId, String accountName) {
-        User user = findById(userId); 
-        Account account = new Account();
-        account.setAccountName(accountName);
-        account.setUser(user); 
-
-        user.getAccounts().add(account);  
-        return accountRepo.save(account); 
-    }
-
-    @Transactional
-    public void saveAccountForUser(User user, Account account) {
-       
-        account.setUser(user); 
-        user.getAccounts().add(account);
-
-        accountRepo.save(account); 
-        userRepo.save(user);       
-    }
-
-    @Transactional
-    public void updateUserAccounts(Long userId) {
-        User user = userRepo.findById(userId).orElseThrow();
-        List<Account> accounts = user.getAccounts();
-        accounts.add(new Account());
-    }
-
-    @Transactional
-    public void saveOrUpdateAccount(Long userId, Account account) {
-        User user = findById(userId); 
-        Optional<Account> existingAccountOpt = user.getAccounts().stream()
-                .filter(a -> a.getAccountId().equals(account.getAccountId()))
-                .findFirst();
-        
-        if (existingAccountOpt.isPresent()) {
-            Account existingAccount = existingAccountOpt.get();
-            existingAccount.setAccountName(account.getAccountName());
-        } else {
-            account.getUser();
-            user.getAccounts().add(account);
-        }
-        
-        accountRepo.save(account);
-    }
-
-    public Long getLastAccountId() {
-        return accountRepo.findMaxAccountId(); 
-    }
-
-    public Account findByAccountId(Long accountId) {
-        return accountRepo.findById(accountId).orElseThrow(() -> 
-            new ResourceNotFoundException("Account not found for ID: " + accountId));
-    }
-
-    public Set<User> findAllUsersWithAccountsAndAddress() {
-        return userRepo.findAllUsersWithAccountsAndAddress();
-    }
 }

@@ -1,10 +1,8 @@
 package com.coderscampus.assignment13.web;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -14,23 +12,39 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.coderscampus.assignment13.domain.User;
+import com.coderscampus.assignment13.ResourceNotFoundException;
 import com.coderscampus.assignment13.domain.Account;
 import com.coderscampus.assignment13.domain.Address;
+import com.coderscampus.assignment13.service.AccountService;
+import com.coderscampus.assignment13.service.AddressService;
 import com.coderscampus.assignment13.service.UserService;
 
 @Controller
 public class UserController {
 	
-	@Autowired
 	private UserService userService;
+	private AccountService accountService;
+	private AddressService addressService;
 	
-	  public UserController(UserService userService) {
-	        this.userService = userService;
-	    }
+	public UserController(UserService userService, AccountService accountService, AddressService addressService) {
+		super();
+		this.userService = userService;
+		this.accountService = accountService;
+		this.addressService = addressService;
+	}
 
+	@GetMapping("/")
+	public String index() {
+		return "redirect:/users";
+	}
+	
+	@GetMapping("/error")
+	public String eror() {
+		return "error/404";
+	}
+	  
 	@GetMapping("/details")
     public ResponseEntity<Set<User>> getUsersWithDetails() {
         Set<User> users = userService.findAll();
@@ -55,134 +69,85 @@ public class UserController {
 	    return "users";
 	}
 
-	@GetMapping("/users/{userId}/details")
-	public String getUserDetails(@PathVariable Long userId, Model model) {
-	    
-	    User user = userService.findById(userId);
-	    
-	    List<Account> accounts = user.getAccounts();
-	    
-	    model.addAttribute("user", user);
-	    model.addAttribute("accounts", accounts); 
-	    
-	    return "userDetails";
-	}
-
 	@PostMapping("/users/{userId}/accounts/{accountId}/save")
 	public String saveAccount(@PathVariable Long userId, 
 	                          @PathVariable Long accountId, 
 	                          @ModelAttribute Account account) {
-	    
 	    User user = userService.findById(userId); 
-	    
 	    account.setUser(user); 
-
-	    userService.saveAccountForUser(user, account);
-
-	    System.out.println("User ID: " + userId);
-	    System.out.println("Account ID: " + accountId);
-	    System.out.println("Account Name: " + account.getAccountName());
-
+	    accountService.saveAccountForUser(user, account);
 	    return "redirect:/users/" + userId;
 	}
 
 	@GetMapping("/users/{userId}/accounts")
 	public String createAccountForm(@PathVariable("userId") Long userId, Model model, @ModelAttribute Account account) {
-	    System.out.println("Create New Account Button Clicked");
-	 
-	    Long lastAccountId = userService.getLastAccountId();
+	    Long lastAccountId = accountService.getLastAccountId();
 	    Long nextAccountId = (lastAccountId != null) ? lastAccountId + 1 : 1; 
-	    
 	    Account newAccount = new Account();
 	    newAccount.setAccountId(nextAccountId);
-	    
 	    model.addAttribute("userId", userId);
 	    model.addAttribute("account", newAccount); 
-	    
-	    System.out.println("Next Account ID: " + nextAccountId);
 	    return "account";
 	}
 	
 	@GetMapping("/users/{userId}/accounts/{accountId}")
 	public String showAccountDetails(@PathVariable Long userId, @PathVariable Long accountId, Model model) {
-		System.out.println("Reached showAccountDetails method");
-	
+		try {
 	    User user = userService.findById(userId);
-	    Account account = userService.findByAccountId(accountId);
-
-	    System.out.println("User ID: " + userId);
-	    System.out.println("Account ID: " + accountId);
-	    System.out.println("Account fetched: " + (account != null ? account.getAccountId() : "null"));
-
+	    Account account = accountService.findByAccountId(accountId);
 	    model.addAttribute("user", user);
 	    model.addAttribute("userId", userId);
 	    model.addAttribute("account", account);
-	    
-	    return "account"; 
+	    return "account";
+		} catch (ResourceNotFoundException e) {
+			return "error/404";
+		}
 	}
 	
 	@PostMapping("/register")
 	public String postCreateUser (User user) {
-		System.out.println(user);
 		userService.saveUser(user);
 		return "redirect:/register";
 	}
 	
-	@RestController
-	public class FaviconController {
-	    @GetMapping("favicon.ico")
-	    public void favicon() {
-	        
-	    }
-	}
-	
 	@PostMapping("/users/{userId}/update")
 	public String updateUser(@PathVariable Long userId, @ModelAttribute User user) {
-
 	    User existingUser = userService.findById(userId);
-
 	    existingUser.setUsername(user.getUsername());
 	    existingUser.setName(user.getName());
-	    
-
 	    if (user.getPassword() != null && !user.getPassword().isEmpty()) {
 	        existingUser.setPassword(user.getPassword());
 	    }
-	    
 	    Address address = user.getAddress();
 	    if (address != null) {
 	        address.setUser(existingUser);
-	        userService.updateAddress(address); 
+	        addressService.updateAddress(address); 
 	    }
-
 	    userService.saveUser(existingUser);
-	    System.out.println("Updating user " + userId);
-
 	    return "redirect:/users";
 	}
 
 	@GetMapping("/users/{userId}")
-	public String getOneUser(ModelMap model, @PathVariable Long userId) {
-	    User user = userService.findById(userId);
-
-	    if (user.getAddress() == null) {
-	        Address newAddress = new Address();
-	        newAddress.setUser(user); 
-	        user.setAddress(newAddress);
+	public String getOneUser(ModelMap model, @PathVariable Long userId) {  
+	    try {
+	    	User user = userService.findById(userId);
+	    	if (user.getAddress() == null) {
+		        Address newAddress = new Address();
+		        newAddress.setUser(user); 
+		        user.setAddress(newAddress);
+		    }
+		    if (user.getAccounts() == null || user.getAccounts().isEmpty()) {
+		        user.setAccounts(new ArrayList<>());
+		    }
+		    model.addAttribute("user", user);
+		    model.addAttribute("accounts", user.getAccounts());
+		    model.addAttribute("address", user.getAddress());
+		    return "userDetails";
+	    } catch (ResourceNotFoundException e) {
+	    	return "error/user-not-found";
 	    }
-
-	    if (user.getAccounts() == null || user.getAccounts().isEmpty()) {
-	        user.setAccounts(new ArrayList<>());
-	    }
-
-	    model.addAttribute("user", user);
-	    model.addAttribute("accounts", user.getAccounts());
-	    model.addAttribute("address", user.getAddress());
-
-	    System.out.println("Confirm");
-	    return "userDetails";
 	}
-
+	    
 	@PostMapping("/users/{userId}")
 	public String postOneUser (@PathVariable Long userId, @ModelAttribute User user) {
 		user.setUserId(userId); 
@@ -198,12 +163,10 @@ public class UserController {
 	
 	@PostMapping("/users/{userId}/accounts")
 	public String createOrUpdateAccount(@PathVariable Long userId, @ModelAttribute Account account) {
-	    if (account.getAccountId() == null) {
-	       
-	        userService.createAccountForUser(userId, account.getAccountName());
+	    if (account.getAccountId() == null) {  
+	        accountService.createAccountForUser(userId, account.getAccountName());
 	    } else {
-	        
-	        userService.saveOrUpdateAccount(userId, account);
+	        accountService.saveOrUpdateAccount(userId, account);
 	    }
 	    return "redirect:/users/" + userId;
 	}
@@ -211,13 +174,12 @@ public class UserController {
 	@PostMapping("/users/save")
 	public String saveUser(@ModelAttribute User user) {
 	    userService.saveUser(user);
-	    System.out.println("User saved successfully for user ID: " + user.getUserId());
 	    return "redirect:/users";
 	}
 
 	@GetMapping("/users/{userId}/accounts/{accountId}/info")
 	public String getOneAccount(ModelMap model, @PathVariable Long userId, @PathVariable Long accountId) {
-	    Account account = userService.findByAccountId(accountId);
+	    Account account = accountService.findByAccountId(accountId);
 	    if (account == null) {
 	        return "redirect:/users/" + userId + "/accounts/new"; 
 	    }
@@ -228,20 +190,17 @@ public class UserController {
 
 	@PostMapping("/users/{userId}/accounts/{accountId}")
 	public String postOneAccount(@PathVariable Long userId, @PathVariable(required = false) Long accountId, @ModelAttribute Account account) {
-	    if (accountId == null || account.getAccountId() == null) {
-	       
-	        Account newAccount = userService.createAccountForUser(userId, account.getAccountName());
+	    if (accountId == null || account.getAccountId() == null) { 
+	        Account newAccount = accountService.createAccountForUser(userId, account.getAccountName());
 	        newAccount.setAccountName(account.getAccountName());
-	        userService.saveOrUpdateAccount(userId, newAccount);
-	        System.out.println("New account created successfully for user ID: " + userId);
+	        accountService.saveOrUpdateAccount(userId, newAccount);
 	        return "redirect:/users/" + userId + "/accounts/" + newAccount.getAccountId();
 	    } else {
-	        
-	        Account existingAccount = userService.findByAccountId(accountId);
+	        Account existingAccount = accountService.findByAccountId(accountId);
 	        if (existingAccount != null) {
 	            existingAccount.setAccountName(account.getAccountName());
-	            userService.saveOrUpdateAccount(userId,existingAccount);
-	            System.out.println("Account updated successfully for account ID: " + accountId);
+	            accountService.saveOrUpdateAccount(userId,existingAccount);
+
 	        }
 	        return "redirect:/users/" + userId + "/accounts/" + accountId;
 	    }
