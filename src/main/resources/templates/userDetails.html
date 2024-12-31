@@ -46,11 +46,11 @@
             <label for="username">Zip Code:</label>
             <input id="zipCode" type="text" th:field="*{address.zipCode}" />
         </div>
-        <button type="submit">Update User Account</button>
+        <button type="submit" style="background-color: #009933; color: black;">Update User Account</button>
     </form>
 
     <form action="#" th:action="@{/users/{userId}/delete(userId=${user.userId})}" method="post">
-        <input type="submit" value="Delete User Account" />
+        <input type="submit" style="background-color: #ff0000; color: black;" value="Delete User Account" />
     </form>
 
     <h3>Accounts</h3>
@@ -65,7 +65,7 @@
     </div>
 
     <form th:action="@{/users/{userId}/accounts(userId=${user.userId})}" method="get">
-        <input type="submit" value="Create New Bank Account" />
+        <input type="submit" style="background-color: #009933; color: black;" value="Create New Bank Account" />
     </form>
 
     <a th:href="@{/users}">Back to Users List</a>

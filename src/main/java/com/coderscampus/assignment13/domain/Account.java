@@ -13,6 +13,8 @@ public class Account {
     @ManyToOne
     @JoinColumn(name = "user_id") 
     private User user;
+    @Column(name = "accounts_order", nullable = false)
+    private Integer accountsOrder = 0;
 
     public Long getAccountId() {
         return accountId;
@@ -37,10 +39,19 @@ public class Account {
     public void setUser(User user) {
         this.user = user;
     }
+    
+	public Integer getAccountsOrder() {
+		return accountsOrder;
+	}
+
+	public void setAccountsOrder(Integer accountsOrder) {
+		this.accountsOrder = accountsOrder;
+	}
 
 	@Override
 	public String toString() {
-		return "Account [accountId=" + accountId + ", accountName=" + accountName + ", user=" + user + "]";
+		return "Account [accountId=" + accountId + ", accountName=" + accountName + ", user=" + user
+				+ ", accountsOrder=" + accountsOrder + "]";
 	}
-
+	
 }
