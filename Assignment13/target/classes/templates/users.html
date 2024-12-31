@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<html>
+<head>
+	<title>Users List</title>
+	<link rel="stylesheet" href="/style.css">
+	<style>
+		/* Additional styles for card layout */
+		.users-container {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 20px;
+			justify-content: center
+		}
+		
+		.user-card {
+			background-color: #ffffff;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			padding: 20px;
+			width: 300px;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		}
+		
+		user-card h3 {
+			margin: 0 0 10px;
+			font-size: 1.2em;
+		}
+		
+		.user-card a {
+			color: #337ab7;
+			text-decoration: none;
+		}
+		
+		.user-card hr {
+			border: 0;
+			border-top: 1px solid #ddd;
+			margin: 15px 0;
+		}
+		
+		.navbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			background-color: darkgrey;
+			padding: 10px 20px;
+			border-radius: 8px;
+		}
+		
+		.navbar a {
+			color: #337ab7;
+			text-decoration: none;
+			font-weight: bold;
+		}
+	</style>
+</head>
+<body>
+	<div class="navbar">
+		<h1>Users</h1>
+		<a href="/register"> <input type="submit" value="+" /></a>
+	</div>
+	
+	 <div class="users-container">
+        <div class="user-card" th:each="user : ${users}">
+            <h3><a th:href="@{/users/{userId}(userId=${user.userId})}" th:text="${user.username}">Username</a></h3>
+            <p th:text="${user.name}">Full Name</p>
+            <p th:text="${user.password}">Password</p>
+
+            <p th:text="${user.address?.addressLine1} ?: ''"></p>
+            <p th:text="${user.address?.addressLine2} ?: ''"></p>
+            <p th:text="${user.address?.city} ?: ''"></p>
+            <p th:text="${user.address?.region} ?: ''"></p>
+            <p th:text="${user.address?.country} ?: ''"></p>
+            <p th:text="${user.address?.zipCode} ?: ''"></p>
+
+            <hr />
+            <div th:each="account : ${user.accounts}">
+                <a th:href="@{/users/{userId}/accounts/{accountId}(userId=${user.userId}, accountId=${account.accountId})}" th:text="${account.accountName}"></a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
